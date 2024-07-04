@@ -1,8 +1,8 @@
 import {AquaAppComponent} from "./aqua.app.component";
 import { CurrentVerseContext } from './currentverse.context';
-import { useCallback, useState } from 'react';
+import React, { useCallback, useEffect, useState } from 'react';
 import { useEvent } from 'platform-bible-react';
-import { DashboardVerseChangeEvent, ParanextVerseChangeEvent } from 'paranext-extension-dashboard';
+import {  DashboardVerseChangeEvent, IService, ParanextVerseChangeEvent, Result, Results, ResultsSelector } from 'paranext-extension-dashboard';
 import { EnvironmentContext } from "./environment.context";
 import { httpPapiFrontRequester } from "./utils/http.papifront.requester.util";
 import { AsyncTask } from "./utils/async-task.util";
@@ -10,7 +10,109 @@ import { AsyncTask } from "./utils/async-task.util";
 import papi from "@papi/frontend";
 
 import { InputGroup, Input, InputRightElement, Button } from "@chakra-ui/react";
+import { useData } from "@papi/frontend/react";
+import { AquaService } from "src/shared/services/aqua.service";
+import { IAquaServiceHooks, ResultsInfo } from "./aqua.xyvalues.datacontext";
 
+/**
+ * Returns the single IAquaServiceHooks service needed by the AQuA application.
+ * 
+ */
+function getServiceHooks(): IService[] {
+
+  /**
+   * An implementation of IAquaServiceHooks that makes requests to the AQuA 
+   * endpoints from the browser/renderer itself.
+   * 
+   * It is not used for a paranext deploy, and is therefore not used here.
+   * It would instead be used when the Application is used by a web portal, for example,
+   * and is provided as an example.
+   */
+  const localAquaResultsService : IAquaServiceHooks = {
+    useResults: (
+      resultsSelector: ResultsSelector,
+      resultsId: any,
+      dependencies: React.DependencyList
+    ): ResultsInfo => {
+        
+      const [results, setResults] = useState([[] as Result[], ''] as Results);
+      const [isLoading, setIsLoading] = useState(false);
+      const [id, setId] = useState();
+
+      const [aquaService] = useState(new AquaService(
+        'https://fxmhfbayk4.us-east-1.awsapprunner.com/v2',
+        {
+          // mode: 'no-cors',
+          headers: {
+            "api_key": "7cf43ae52dw8948ddb663f9cae24488a4",
+            // origin: "https://fxmhfbayk4.us-east-1.awsapprunner.com",
+          },
+          // credentials: "include",
+        },
+        httpPapiFrontRequester,
+        undefined,
+      ));
+      
+      useEffect(() => {
+        async function getResults() {
+          try {
+            if (!isLoading)
+              setIsLoading(true);
+            const [results, id] = await aquaService.getResults(resultsSelector)
+            if (!ignore) {
+              setResults([results, id]);
+              setId(resultsId);
+            }
+          } catch(e) {
+            console.error(e);
+          } finally {
+            if (!ignore)
+              setIsLoading(false);
+          }
+        }
+        let ignore = false;
+        getResults();
+        return () => {
+          ignore = true;
+        }
+      }, dependencies);
+      return {results, resultsId: id, isLoading};
+   }
+  }
+
+   /**
+   * An implementation of IAquaServiceHooks that uses a DataProvider to make requests 
+   * to the AQuA endpoints on its behalf.
+   * 
+   * It is the one used in this deploy.
+   */
+  const extensionAquaResultsService : IAquaServiceHooks = {
+    useResults: 
+      (resultsSelector: ResultsSelector, resultsId: any): ResultsInfo => {
+          const [results, update, isLoading] = useData('aqua.results').ResultsFromStringSelector(JSON.stringify(resultsSelector), [[], ''])
+          const id = resultsId;
+          console.trace(`Values returned for selector ${JSON.stringify(resultsSelector)}: isLoading: ${isLoading}, resultsId (state from which results requested): ${resultsId}, resultsId: ${results[1]}, COUNT of results:${results[0].length}`);
+          if (JSON.stringify(resultsSelector) === results[1])
+            return {results, resultsId: id, isLoading};
+          else
+            return {results: [[], ''], resultsId: resultsId, isLoading: true};
+      }
+  };
+  return [extensionAquaResultsService];
+}
+
+/**
+ * This is an instance of the bootstrapper Component that sets up the runtime environment 
+ * within which the Application runs. 
+ * 
+ * It is responsible for:
+ * 1.  providing the Application with an EnvironmentContext that includes runtime environment-specific
+ * implementations of the services it needs.
+ * 
+ * This specific bootstrapper Component sets up the runtime environment required for
+ * the Application to run as a Paranext/platform.bible extension.
+ * 
+ */
 globalThis.webViewComponent = function VerseAwareWebView() {
   const [verseRef, setVerseRef] = useState('GEN 1:2'); //FIXME: set back to '' once testing complete
 
@@ -35,10 +137,11 @@ globalThis.webViewComponent = function VerseAwareWebView() {
     setTextInput(event.target.value);
   }
 
+    
   let verseText = verseRef;
   return (
     <CurrentVerseContext.Provider value={verseRef}>
-      <EnvironmentContext.Provider value={{requester: httpPapiFrontRequester, persist: undefined, asyncTask: new AsyncTask() }} >
+      <EnvironmentContext.Provider value={{getServiceHooks: getServiceHooks, asyncTask: new AsyncTask() }} >
         <InputGroup size='md'>
           <Input
             style={{

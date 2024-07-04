@@ -1,5 +1,9 @@
 import { XValuesForY, XYValuesInfo, XValue, XY, XYOriginalDatum } from "./xyvaluesinfo.context";
 
+/**
+ * This class is specific to charts.xyvalues.component implementation and provides
+ * it with the ability to convert between XYValues and the internal values required by ApexCharts.
+ */
 export abstract class  ChartXYValues {
   abstract get xyValuesInfo(): XYValuesInfo;
   abstract set xyValuesInfo(xyValuesInfo: XYValuesInfo);
@@ -84,7 +88,7 @@ export class HeatmapAscendingXYValues extends ChartXYValues{
     if (!xy)
       return undefined;
     const i = this._xyValuesInfo?.xValuesForYs.map(xValuesForY => xValuesForY.y).indexOf(xy.y);
-    if (i === undefined)
+    if (i === -1 || i === undefined)
       return undefined;
     const j = this._xyValuesInfo?.xValuesForYs[i].values.map(xValue => xValue.x).indexOf(xy.x);
     if (j === undefined)

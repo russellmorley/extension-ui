@@ -1,7 +1,7 @@
 import { PropsWithChildren, useContext, useEffect, useState } from "react";
 import { TokensTextRow, TokensTextRowsInfo, TokensTextRowsInfoContext } from "./tokenstextrows.context";
 import { EnvironmentContext } from "./environment.context";
-import { CorpusInsightsService } from "src/shared/services/corpusinsights.service";
+import { ICorpusService } from "src/shared/services/corpusinsights.service";
 
 type DataContextParams = {
   verseRef: string;
@@ -9,26 +9,12 @@ type DataContextParams = {
 
 export function CorpusInsightsTokensTextRowsDataContext({ children, verseRef } : PropsWithChildren<DataContextParams>) {
   const environment = useContext(EnvironmentContext);
-  if (!environment.requester)
-    throw new Error("environment requester must be set for this service");
-
   const [isLoading, setIsLoading] = useState(false);
   const [tokensTextRowsInfo, setTokensTextRowsInfo] = useState({tokensTextRows: [] as TokensTextRow[]} as TokensTextRowsInfo);
-
-  const [corpusService] = useState(new CorpusInsightsService(
-    'https://fxmhfbayk4.us-east-1.awsapprunner.com/v2',
-    {
-      // mode: 'no-cors',
-      headers: {
-        "api_key": "7cf43ae52dw8948ddb663f9cae24488a4",
-        // origin: "https://fxmhfbayk4.us-east-1.awsapprunner.com",
-      },
-      // credentials: "include",
-    },
-    environment!.requester,
-    environment.persist,
-  ));
-
+  
+  const useServices = environment.getServiceHooks;
+  const corpusService = useServices()[0] as ICorpusService;
+  
   class SettingsWebviewState {
     tokenizedtextcorpus_id: string | undefined;
     tokenizedtextcorpus_name: string | undefined;

@@ -7,7 +7,7 @@ import { CurrentVerseContext } from "./currentverse.context";
 import { Canon } from "@sillsdev/scripture";
 import { HeatmapAscendingXYValues } from "./chart.xyvalues";
 
-import { ChakraProvider } from '@chakra-ui/react'
+import { ChakraProvider, StatHelpText } from '@chakra-ui/react'
 import { Button, ButtonGroup } from '@chakra-ui/react'
 import { Card, CardHeader, CardBody, CardFooter } from '@chakra-ui/react'
 import { Text } from '@chakra-ui/react'
@@ -19,6 +19,20 @@ type Visualization = {
   footer?: JSX.Element,
 }
 
+/** This is the Application Component, the root component of the user's experience. 
+ *
+ * It is responsible for things like:
+ * - assembling its views
+ * - managing its application state and navigation between its views.
+ * 
+ * It, and it's children, are written without dependencies on the environment within which they 
+ * run (i.e. they can run without modification in Paranext/platform.bible, Dashboard, in a web portal,
+ * in a VS Code fork, etc.)
+ * 
+ * It would ideally not know anything about descendent implementation details. However, when setting up a
+ * descendent tooltip, it currently does (it has details on how ApexCharts stores data internally).
+ * This should be fixed (after line 58 or so and 78).
+ */
 export function AquaAppComponent() {
   const verseRef = useContext(CurrentVerseContext);
 

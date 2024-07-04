@@ -34,6 +34,19 @@ const rightSliderInitialPosition = -1;
 const minimumSliderGap = .01;
 const sliderStep = .01;
 
+
+/**
+ * This Component is responsible for providing a visualization based on 
+ * XYValues.
+ * 
+ * It's primary visualization is provided by ApexCharts.
+ * 
+ * It requires:
+ * 1. a XYValuesInfoInfoContext from which it obtains data.
+ * 
+ * @param param0 
+ * @returns 
+ */
 export function ChartsFromXYValuesComponent({
   chartXYValues,
   initialSliderPositionsStdDeviationMultiple = 3,
@@ -180,6 +193,7 @@ export function ChartsFromXYValuesComponent({
   }
 
   useEffect(() => {
+    // this needs to be in useEffect because it needs a rendered chart to modify.
     // mark the focused cell
     const ij = chartXYValues.getIJFromXY(chartXYValues.xyValuesInfo.highlightedXY);
     if (ij) {

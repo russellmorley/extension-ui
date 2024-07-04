@@ -13,6 +13,16 @@ export type AquaTokensTextRowsDataContextParams = {
   verseTexts: VerseText[];
 }
 
+/**
+ * This Component is responsible for obtaining, preparing, and providing data in 'TokenTextRows' format 
+ * in a TokensTextRowsInfoContext for descendent Components that consume TokensTextRows. 
+ * 
+ * It obtains data from its verseText param rather than from a EnvironmentContext that has a IAquaServiceHooks
+ * service at this point because this data is included in the original data obtaind for XYValuesInfo.
+ * 
+ * It is responsible for:
+ * 1. providing an TokensTextRowsInfoContext for descendent Components to obtain TokensTextRowsInfo.
+ */
 export function AquaTokenTextRowsDataContext({ children, corpusId, corpusName, verseTexts } : PropsWithChildren<AquaTokensTextRowsDataContextParams>) {
   const [tokensTextRows, setTokensTextRows] = useState([] as TokensTextRow[]);
 

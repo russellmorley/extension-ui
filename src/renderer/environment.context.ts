@@ -1,11 +1,9 @@
 import { createContext } from 'react';
-import { IPersist } from 'src/types/persist.type';
-import { Requester } from 'src/types/requester.type';
 import { AsyncTask } from './utils/async-task.util';
+import { IService } from 'paranext-extension-dashboard';
 
 export type Environment = {
-  requester: Requester | undefined,
-  persist: IPersist | undefined,
+  getServiceHooks: () => IService[];
   asyncTask: AsyncTask | undefined
 };
 

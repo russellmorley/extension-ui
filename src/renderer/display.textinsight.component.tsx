@@ -1,4 +1,3 @@
-import {  useState } from "react";
 import { TextInsight } from "src/shared/services/textinsights.service";
 import { Card, CardBody, CardFooter, CardHeader, Text } from '@chakra-ui/react'
 

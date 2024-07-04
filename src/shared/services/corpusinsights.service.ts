@@ -3,8 +3,18 @@ import { Requester } from "src/types/requester.type";
 import { CacheService, KeysSelector, SelectorInfo } from "./cache.service";
 import { AsyncLock } from "../utils/async-lock.util";
 import { IPersist } from "src/types/persist.type";
+import { IService } from "paranext-extension-dashboard";
 
-export class CorpusInsightsService {
+export interface ICorpusService extends IService {
+  getByVerseRange(
+    tokenizedTextCorpusId: string,
+    tokenizedTextCorpusName: string,
+    verseRef: string,
+    numberOfVersesInChapterBefore: number,
+    numberOfVersesInChapterAfter: number): Promise<TokensTextRowsInfo>;
+}
+
+export class CorpusInsightsService implements ICorpusService{
   // endpoints
   private readonly tokensTextRows: string = 'tokenstextrows';
 

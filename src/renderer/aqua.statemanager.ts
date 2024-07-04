@@ -158,7 +158,6 @@ export class AquaStateManager extends BaseStateManager {
     try {
       return (verseRef === undefined) ? undefined : new VerseRef(verseRef).book;
     } catch (e) {
-      console.debug(`Could not extract book using VerseRef from ${verseRef}: ${JSON.stringify(e)}. Trying split...`);
       const parts = verseRef!.split(" ");
       if (parts.length === 2)
         return parts[0];
@@ -174,7 +173,6 @@ export class AquaStateManager extends BaseStateManager {
     try {
       return (verseRef === undefined) ? undefined : new VerseRef(verseRef).bookNum;
     } catch (e) {
-      console.debug(`Could not extract book using VerseRef from ${verseRef}: ${JSON.stringify(e)}. Trying split...`);
       const parts = verseRef!.split(" ");
       if (parts.length === 2)
         return parseInt(parts[0]);
@@ -190,7 +188,6 @@ export class AquaStateManager extends BaseStateManager {
     try {
       return (verseRef === undefined) ? undefined : new VerseRef(verseRef).chapter;
     } catch (e) {
-      console.debug(`Could not extract chapter using VerseRef from ${verseRef}: ${JSON.stringify(e)}. Trying split...`);
       const parts = verseRef!.split(" ");
       if (parts.length === 2)
         return parts[1];
@@ -206,7 +203,6 @@ export class AquaStateManager extends BaseStateManager {
     try {
       return (verseRef === undefined) ? undefined : new VerseRef(verseRef).chapterNum;
     } catch (e) {
-      console.debug(`Could not extract chapter using VerseRef from ${verseRef}: ${JSON.stringify(e)}. Trying split...`);
       const parts = verseRef!.split(" ");
       if (parts.length === 2)
         return parseInt(parts[1]);

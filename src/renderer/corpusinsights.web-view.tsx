@@ -1,7 +1,7 @@
 import { CurrentVerseContext } from './currentverse.context';
 import { useCallback, useState } from 'react';
 import { useEvent } from 'platform-bible-react';
-import { DashboardVerseChangeEvent, ParanextVerseChangeEvent } from 'paranext-extension-dashboard';
+import { DashboardVerseChangeEvent, IService, ParanextVerseChangeEvent } from 'paranext-extension-dashboard';
 import { EnvironmentContext } from "./environment.context";
 import { httpPapiFrontRequester } from "./utils/http.papifront.requester.util";
 import { AsyncTask } from "./utils/async-task.util";
@@ -10,6 +10,7 @@ import papi from "@papi/frontend";
 
 import { InputGroup, Input, InputRightElement, Button } from "@chakra-ui/react";
 import { CorpusInsightsAppComponent } from "./corpusinsights.app.component";
+import { CorpusInsightsService } from 'src/shared/services/corpusinsights.service';
 
 globalThis.webViewComponent = function CorpusInsightsWebView() {
   const [verseRef, setVerseRef] = useState('GEN 1:2'); //FIXME: set back to '' once testing complete
@@ -35,10 +36,27 @@ globalThis.webViewComponent = function CorpusInsightsWebView() {
     setTextInput(event.target.value);
   }
 
+  function getServiceHooks():  IService[] {
+    const [localCorpusInsightsService] = useState(new CorpusInsightsService(
+      'https://insightsservices.awsapprunner.com/v1',
+      {
+        // mode: 'no-cors',
+        headers: {
+          "api_key": "7cf43ae52dw8948ddb663f9cae24488a4",
+          // origin: "https://insightsservices.awsapprunner.com/v1",
+        },
+        // credentials: "include",
+      },
+      httpPapiFrontRequester,
+      undefined,
+    ));
+    return [localCorpusInsightsService];
+  }
+
   let verseText = verseRef;
   return (
     <CurrentVerseContext.Provider value={verseRef}>
-      <EnvironmentContext.Provider value={{requester: httpPapiFrontRequester, persist: undefined, asyncTask: new AsyncTask() }} >
+      <EnvironmentContext.Provider value={{getServiceHooks: getServiceHooks, asyncTask: new AsyncTask() }} >
         <InputGroup size='md'>
           <Input
             style={{

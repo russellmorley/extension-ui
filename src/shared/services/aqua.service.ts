@@ -2,7 +2,7 @@
 
 import { CacheService, KeysSelector, SelectorInfo } from './cache.service';
 import { VerseRef, Canon } from '@sillsdev/scripture';
-import { Result, ResultsSelector } from 'paranext-extension-dashboard';
+import { IService, Result, ResultsSelector } from 'paranext-extension-dashboard';
 import { AsyncLock } from '../utils/async-lock.util';
 import { Requester } from '../../types/requester.type';
 import { IPersist } from 'src/types/persist.type';
@@ -10,8 +10,7 @@ import { error } from 'console';
 
 
 // If relying on headers, see https://stackoverflow.com/a/45640164, https://web.dev/articles/introduction-to-fetch#response_types
-
-export interface IAquaService {
+export interface IAquaService extends IService {
   /**
    *
    * @param param0
@@ -69,7 +68,6 @@ export class AquaService implements IAquaService {
               try {
                 keyPartOne = new VerseRef(keyPartOne).book;
               } catch(e) {
-                console.debug(`Could not extract book using VerseRef from ${keyPartOne}: ${JSON.stringify(e)}. Trying split...`);
                 const parts = keyPartOne.split(" ");
                 if (parts.length === 2)
                   keyPartOne = parts[0];
@@ -80,7 +78,7 @@ export class AquaService implements IAquaService {
                 }
               }
             }
-            console.debug(`${info.keyPrefix}_${item[keyParts[0] as keyof Result] as string}__${keyPartOne}__${info.valuesType}`);
+            // console.debug(`${info.keyPrefix}_${item[keyParts[0] as keyof Result] as string}__${keyPartOne}__${info.valuesType}`);
             return [
               `${info.keyPrefix}_${item[keyParts[0] as keyof Result] as string}__${keyPartOne}__${info.valuesType}`
             ];

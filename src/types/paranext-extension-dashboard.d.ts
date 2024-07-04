@@ -1,7 +1,11 @@
 declare module 'paranext-extension-dashboard' {
   import { DataProviderDataType, IDataProvider } from '@papi/core';
 
-  export type Results = Result[];
+  export interface IService {}
+  
+  export type Results = [Result[], string];
+
+  export type ResultsPromise = Promise<Results>;
 
   export type ResultsSelector = {assessment_id: number, book?: string, aggregateByChapter?: boolean};
 
@@ -21,7 +25,7 @@ declare module 'paranext-extension-dashboard' {
 
   export type AquaDataTypes = {
     // Result: DataProviderDataType<Result>;
-    Results: DataProviderDataType<ResultsSelector, Results, void>
+    ResultsFromStringSelector: DataProviderDataType<string, Results, undefined>
   }
   export type AquaDataProvider = IDataProvider<AquaDataTypes>;
 
@@ -70,7 +74,6 @@ declare module 'papi-shared-types' {
   }
 
   export interface DataProviders {
-    'paranextExtensionTemplate.quickVerse': ExtensionVerseDataProvider;
     'aqua.results': AquaDataProvider;
   }
 }

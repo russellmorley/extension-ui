@@ -1,11 +1,11 @@
-import { DataProviderEngine } from "@papi/backend";
-import { ExecutionToken, IDataProviderEngine, UnsubscriberAsync } from "@papi/core";
-import { DataProviderDataType, DataProviderGetter, DataProviderSetter } from "shared/models/data-provider.model";
+import papi, { DataProviderEngine } from "@papi/backend";
+import { IDataProviderEngine } from "@papi/core";
+import { UnsubscriberAsync } from 'platform-bible-utils';
+import { DataProviderSetter } from "shared/models/data-provider.model";
 import { AquaService, IAquaService} from "src/shared/services/aqua.service";
 import type {
   AquaDataTypes,
-  Result,
-  Results,
+  ResultsPromise,
   ResultsSelector,
 } from 'paranext-extension-dashboard';
 import {ExtensionStoragePersist} from '../services/extension-storage.persist.service';
@@ -17,7 +17,7 @@ export class AquaDataProviderEngine
 {
   aquaService: AquaService;
 
-  constructor(token: ExecutionToken, prefix: string) {
+  constructor() {
     super();
 
     this.aquaService = new AquaService(
@@ -31,17 +31,22 @@ export class AquaDataProviderEngine
         // credentials: "include",
       },
       httpPapiBackRequester,
-      new ExtensionStoragePersist(token, prefix),
+      undefined, //new ExtensionStoragePersist(token, prefix),
     );
   }
-
-  async getResults({ assessment_id, book }: ResultsSelector): Promise<Result[]> {
-    return await this.aquaService.getResults({ assessment_id, book }) as Results;
+ async getResultsFromStringSelector(resultsSelectorString: string): ResultsPromise {
+    return await this.getResults(JSON.parse(resultsSelectorString) as ResultsSelector);
   }
 
+  @papi.dataProviders.decorators.ignore
+  async getResults(resultsSelector: ResultsSelector): ResultsPromise {
+    const results = await this.aquaService.getResults(resultsSelector);
+    console.trace(`Dataprovider extension got ${results[0].length} results and is returning it to the client`);
+    return results;
+  }
   dispose?: UnsubscriberAsync | undefined;
 
   onDidDispose?: undefined;
 
-  setResults: DataProviderSetter<AquaDataTypes, 'Results'> = async () => false;
+  setResultsFromStringSelector: DataProviderSetter<AquaDataTypes, 'ResultsFromStringSelector'> = async () => false;
 }

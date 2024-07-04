@@ -68,7 +68,7 @@ const corpusInsightsWebViewProvider: IWebViewProvider = {
 };
 
 export async function activate(context: ExecutionActivationContext) {
-  const aquaDataProviderEngine = new AquaDataProviderEngine(context.executionToken, 'aquadataproviderengine');
+  const aquaDataProviderEngine = new AquaDataProviderEngine();
   const aquaDataProviderPromise = papi.dataProviders.registerEngine(
     'aqua.results',
     aquaDataProviderEngine

@@ -78,6 +78,7 @@
     "zip-build": "^1.8.0"
   },
   "dependencies": {
+    "platform-bible-utils": "file:../paranext-core/lib/platform-bible-utils",
     "@chakra-ui/react": "^2.8.2",
     "@emotion/react": "^11.11.4",
     "@emotion/styled": "^11.11.0",
