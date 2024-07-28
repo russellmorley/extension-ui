@@ -94,14 +94,14 @@ function getServiceHooks(): IService[] {
       (resultsSelector: ResultsSelector, resultsId: any): ResultsInfo => {
           const [results, update, isLoading] = useData('aqua.results').ResultsFromStringSelector(JSON.stringify(resultsSelector), [[], ''])
           const id = resultsId;
-          console.trace(`Values returned for selector ${JSON.stringify(resultsSelector)}: isLoading: ${isLoading}, resultsId (state from which results requested): ${resultsId}, resultsId: ${results[1]}, COUNT of results:${results[0].length}`);
+          console.debug(`Values returned for selector ${JSON.stringify(resultsSelector)}: isLoading: ${isLoading}, resultsId (state from which results requested): ${resultsId}, resultsId: ${results[1]}, COUNT of results:${results[0].length}`);
           if (JSON.stringify(resultsSelector) === results[1])
             return {results, resultsId: id, isLoading};
           else
             return {results: [[], ''], resultsId: resultsId, isLoading: true};
       }
   };
-  return [localAquaResultsService];
+  return [extensionAquaResultsService];
 }
 
 /**

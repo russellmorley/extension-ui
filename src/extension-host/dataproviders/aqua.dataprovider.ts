@@ -1,5 +1,5 @@
 import papi, { DataProviderEngine } from "@papi/backend";
-import { IDataProviderEngine } from "@papi/core";
+import { ExecutionToken, IDataProviderEngine } from "@papi/core";
 import { UnsubscriberAsync } from 'platform-bible-utils';
 import { DataProviderSetter } from "shared/models/data-provider.model";
 import { AquaService, IAquaService} from "src/shared/services/aqua.service";
@@ -15,23 +15,27 @@ export class AquaDataProviderEngine
   extends DataProviderEngine<AquaDataTypes>
   implements IDataProviderEngine<AquaDataTypes>, IAquaService
 {
+  private static readonly PREFIX = 'aqua';
+  private static readonly BASEURI = 'https://fxmhfbayk4.us-east-1.awsapprunner.com/v2';
+  private static readonly PARAMSTOINCLUDE = {
+    // mode: 'no-cors',
+    headers: {
+      "api_key": "7cf43ae52dw8948ddb663f9cae24488a4",
+      // origin: "https://fxmhfbayk4.us-east-1.awsapprunner.com",
+    },
+    // credentials: "include",
+  }
+
   aquaService: AquaService;
 
-  constructor() {
+  constructor(executionToken: ExecutionToken) {
     super();
 
     this.aquaService = new AquaService(
-      'https://fxmhfbayk4.us-east-1.awsapprunner.com/v2',
-      {
-        // mode: 'no-cors',
-        headers: {
-          "api_key": "7cf43ae52dw8948ddb663f9cae24488a4",
-          // origin: "https://fxmhfbayk4.us-east-1.awsapprunner.com",
-        },
-        // credentials: "include",
-      },
+      AquaDataProviderEngine.BASEURI,
+      AquaDataProviderEngine.PARAMSTOINCLUDE,
       httpPapiBackRequester,
-      undefined, //new ExtensionStoragePersist(token, prefix),
+      new ExtensionStoragePersist(executionToken, AquaDataProviderEngine.PREFIX),
     );
   }
  async getResultsFromStringSelector(resultsSelectorString: string): ResultsPromise {
@@ -41,7 +45,7 @@ export class AquaDataProviderEngine
   @papi.dataProviders.decorators.ignore
   async getResults(resultsSelector: ResultsSelector): ResultsPromise {
     const results = await this.aquaService.getResults(resultsSelector);
-    console.trace(`Dataprovider extension got ${results[0].length} results and is returning it to the client`);
+    console.debug(`Dataprovider extension got ${results[0].length} results and is returning it to the client`);
     return results;
   }
   dispose?: UnsubscriberAsync | undefined;
