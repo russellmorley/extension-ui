@@ -1,5 +1,7 @@
 import { IPersist } from "src/types/persist.type";
 
+type Value = {storeKey: string, items: any[]};
+
 export class IndexedDbPersist implements IPersist {
   db: IDBDatabase | undefined;
   objectStore: string;
@@ -12,37 +14,41 @@ export class IndexedDbPersist implements IPersist {
     return new Promise<void>((resolve) => {
       const openRequest = indexedDB.open(dbName, dbVersion);
       const instance = this;
+
+      openRequest.onerror = (event) => {
+        console.error(`Couldn't open db ${dbName} version ${dbVersion} due to error ${event.target.errorCode}`);
+      };
+      openRequest.onsuccess = (e) => {
+        console.debug(`onsuccess: setting db ${e.target.result}`);
+        instance.db = e.target.result;
+        resolve();
+      };
+
       openRequest.onupgradeneeded = function(e) {
-        const db = openRequest.result;
+        const db = e.target.result;
+        console.debug(`onupgradeneeded: getting db ${e.target.result}`);
         if (!db.objectStoreNames.contains(instance.objectStore)) {
           db.createObjectStore(instance.objectStore, { keyPath: 'storeKey' });
+          console.debug(`created object store ${instance.objectStore}`);
         }
-        instance.db = db
-        resolve();
       };
     });
   }
 
   get(key: string) : Promise<any[] | undefined> {
     return new Promise<any[] | undefined>((resolve, reject) => {
-      // const value = localStorage.getItem(`${this.prefix}_${key}`);
-      // if (value)
-      //   resolve(JSON.parse(value));
-      // else
-      //   resolve(undefined);
-      // });
       try {
         const itemsNotAdded: Array<string> = new Array<string>();
 
         if (typeof this.db === 'undefined') {
-          reject('db not set');
+          reject(`get ${key}: db not set`);
         }
         const request = this.db!
-          .transaction([this.objectStore], "readwrite")
+          .transaction([this.objectStore])
           .objectStore(this.objectStore)
-          .getKey(key);
+          .get(key);
         request.onsuccess = (event) => {
-          resolve(request.result as any[]);
+          resolve((request.result as Value)?.items ?? undefined);
         };
         request.onerror = (error) => {
           reject(JSON.stringify(error));
@@ -55,11 +61,9 @@ export class IndexedDbPersist implements IPersist {
 
   set(key: string, items: any[]): Promise<void> {
     return new Promise<void>((resolve, reject) => {
-      // localStorage.setItem(`${this.prefix}_${key}`, JSON.stringify(items));
-      // resolve();
       try {
         if (typeof this.db === 'undefined') {
-          reject('db not set');
+          reject('set ${key}: db not set');
         }
         const transaction = this.db!.transaction([this.objectStore], "readwrite");
         transaction.oncomplete = (event) => {
@@ -71,18 +75,14 @@ export class IndexedDbPersist implements IPersist {
 
         const store = transaction.objectStore(this.objectStore);
 
-        items.forEach((item) => {
-          item.storeKey = key;
-        });
-
         let request: IDBRequest<IDBValidKey>;
         try {
-          const request = store.add({storeKey: key, items});
+          const request = store.add({storeKey: key, items} as Value);
           request.onerror = (event) => {
             reject(`Couldn\'t add: ${JSON.stringify(event)}`);
           };
         } catch (ConstraintError) {
-          const request = store.put({storeKey: key, items})
+          const request = store.put({storeKey: key, items} as Value)
           request.onerror = (event) => {
             reject(`Couldn\'t put: ${JSON.stringify(event)}`);
           };
@@ -95,11 +95,9 @@ export class IndexedDbPersist implements IPersist {
 
   remove(key: string): Promise<void> {
     return new Promise<void>((resolve, reject) => {
-      // localStorage.removeItem(`${this.prefix}_${key}`);
-      // resolve();
       try {
         if (typeof this.db === 'undefined') {
-          reject('db not set');
+          reject('remove ${key}: db not set');
         }
         const request = this.db!
           .transaction([this.objectStore], "readwrite")
@@ -117,20 +115,4 @@ export class IndexedDbPersist implements IPersist {
       }
    });
   }
-
-  /**
-   * Clears all keys starting with prefix.
-   */
-  // clear(): Promise<void> {
-  //   return new Promise<void>((resolve) => {
-  //     let keys: Array<string> = new Array<string>();
-  //     for (let i = 0; i < localStorage.length; i++) {
-  //       const key = localStorage.key(i);
-  //       if (key?.indexOf(this.prefix) == 0)
-  //         keys.push(key);
-  //       keys.forEach((key) => localStorage.removeItem(key));
-  //     }
-  //     resolve();
-  //   });
-  // }
 }

@@ -13,6 +13,7 @@ import { InputGroup, Input, InputRightElement, Button } from "@chakra-ui/react";
 import { useData } from "@papi/frontend/react";
 import { AquaService } from "src/shared/services/aqua.service";
 import { IAquaServiceHooks, ResultsInfo } from "./aqua.xyvalues.datacontext";
+import { IndexedDbPersist } from "./services/indexeddb.persist.service";
 
 /**
  * Returns the single IAquaServiceHooks service needed by the AQuA application.
@@ -39,6 +40,7 @@ function getServiceHooks(): IService[] {
       const [isLoading, setIsLoading] = useState(false);
       const [id, setId] = useState();
 
+      const persist = new IndexedDbPersist('assessments');
       const [aquaService] = useState(new AquaService(
         'https://fxmhfbayk4.us-east-1.awsapprunner.com/v2',
         {
@@ -50,12 +52,13 @@ function getServiceHooks(): IService[] {
           // credentials: "include",
         },
         httpPapiFrontRequester,
-        undefined,
+        persist,
       ));
       
       useEffect(() => {
         async function getResults() {
           try {
+            await persist.openDb("aqua", 1);
             if (!isLoading)
               setIsLoading(true);
             const [results, id] = await aquaService.getResults(resultsSelector)
@@ -98,7 +101,7 @@ function getServiceHooks(): IService[] {
             return {results: [[], ''], resultsId: resultsId, isLoading: true};
       }
   };
-  return [extensionAquaResultsService];
+  return [localAquaResultsService];
 }
 
 /**

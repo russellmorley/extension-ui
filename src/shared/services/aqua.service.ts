@@ -64,12 +64,17 @@ export class AquaService implements IAquaService {
             });
           if (keyParts.length == 2) {
             let keyPartOne: string = item[keyParts[1] as keyof Result] as string;
+            // If vref is included, we want a book, e.g. GEN
+            // if the vref supplied is greater than three, try to extract book...
             if (keyPartOne.length > 3) {
               try {
+                // ... first assume it is a full verseref, e.g. GEN 1:1, and try to parse it using scripture VerseRef and extract Book
                 keyPartOne = new VerseRef(keyPartOne).book;
               } catch(e) {
+                //If parsing the vref fails, assume it only includes a chapter, e.g. Gen 1.
                 const parts = keyPartOne.split(" ");
                 if (parts.length === 2)
+                  // assume the first part of the split is the book
                   keyPartOne = parts[0];
                 else {
                   const errorMessage =`Could not extract book using spit from ${keyPartOne}: ${JSON.stringify(e)}`;
@@ -78,6 +83,7 @@ export class AquaService implements IAquaService {
                 }
               }
             }
+            // ... if length isn't greater than three, assume it is book, e.g. GEN.
             // console.debug(`${info.keyPrefix}_${item[keyParts[0] as keyof Result] as string}__${keyPartOne}__${info.valuesType}`);
             return [
               `${info.keyPrefix}_${item[keyParts[0] as keyof Result] as string}__${keyPartOne}__${info.valuesType}`
@@ -125,14 +131,18 @@ export class AquaService implements IAquaService {
       let results: Result [] | undefined;
       const info = {keyPrefix: 'assessment', valuesType: aggregateByChapter ? 'chapterresults' : 'verseresults'} as SelectorInfo;
       if (this.cacheService) {
-        if (book)
+        if (book) {
+          const keyValuePartsOfResult: Result = {assessment_id: assessment_id, vref: book.toString()};
           results = await this.cacheService.get(
             info,
-            {assessment_id: assessment_id, vref: book.toString()} as Result)
-        else {
+            keyValuePartsOfResult);
+          console.debug(`Results obtained from cache for info ${JSON.stringify(info)} and keyValuePartsOfResult ${JSON.stringify(keyValuePartsOfResult)} have count: ${results?.length}`);
+        } else {
+          const keyValuePartsOfResult: Result = {assessment_id: assessment_id};
           results = await this.cacheService.get(
             info,
-            {assessment_id: assessment_id} as Result);
+            keyValuePartsOfResult);
+          console.debug(`Results obtained from cache for info ${JSON.stringify(info)} and keyValuePartsOfResult ${JSON.stringify(keyValuePartsOfResult)} have count: ${results?.length}`);
         }
       }
       if (!results) {
@@ -158,6 +168,7 @@ export class AquaService implements IAquaService {
               `${this.baseUri}/${this.result}?assessment_id=${assessment_id}&aggregate=chapter`,
               this.paramsToInclude,
             )).results;
+        console.debug(`Results obtained from endpoint count: ${results?.length}. Putting in cache`);
         await this.cacheService?.set(
           info,
           results);

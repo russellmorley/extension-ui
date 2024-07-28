@@ -37,6 +37,7 @@ export class CacheService<T> {
     info: SelectorInfo,
     items: Array<T>,
   ): Promise<void> {
+    // console.debug(`cache.service.set() items ${JSON.stringify(items)}`);
     return new Promise<void>(async (resolve, reject) => {
       try {
         await this.keepMapAndPersistInSyncLock.promise; //wait for the lock
@@ -82,6 +83,7 @@ export class CacheService<T> {
         this.keepMapAndPersistInSyncLock.lock(); //once the lock is free, grab it.
         if (this.persist && !this.map[key]) {
           const value = await this.persist!.get(key);
+          //console.debug(`getByKey(${key}) value: ${value}`);
           if (value)
           this.map[key] = value;
         }
@@ -119,12 +121,12 @@ export class CacheService<T> {
       info,
       ...Object.entries(keyValueParts as {}).map(([key, _]) => key)
     )(keyValueParts);
-    //console.debug(JSON.stringify(keys));
+    //console.debug(JSON.stringify(keys));  
     //console.debug(JSON.stringify(this.map));
     const instance = this;
     let ret = await keys.reduce<Promise<Array<T>>>(async (accumulator, key) => {
       const valuesForKey = await instance.getByKey(key);
-      //console.debug(`valuesForKey ${valuesForKey} key: ${key}`);
+      // console.debug(JSON.stringify(this.map));
       if (valuesForKey) {
         //console.debug(`in reducer with ${accumulator} and ${key}: concatenating`);
         (await accumulator).push(...valuesForKey);
